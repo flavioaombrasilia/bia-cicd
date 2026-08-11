@@ -3,10 +3,11 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo Fazendo login no ECR...
-      - aws --version
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 310189683227.dkr.ecr.us-east-1.amazonaws.com
-      - REPOSITORY_URI=310189683227.dkr.ecr.us-east-1.amazonaws.com/bia
+      - echo Fazendo login no ECR... comando sugeridos no console do ECR , repositorio e obotão "View push commands"     
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 241585213334.dkr.ecr.us-east-1.amazonaws.com
+      - echo Definindo variáveis de ambiente... para utilização no build e post_build
+      - REPOSITORY_URI=241585213334.dkr.ecr.us-east-1.amazonaws.com/bia
+      - echo Definindo a tag da imagem com os 7 primeiros caracteres do hash do commit ou "latest" caso não seja possível obter o hash
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
@@ -22,6 +23,8 @@ phases:
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Gerando artefato da imagem para o ECS
-      - printf '[{"name":"bia","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - o imagedefinitions.json é um arquivo JSON que descreve a imagem do contêiner que será implantada no ECS. Ele contém informações sobre o nome do contêiner e a URI da imagem no ECR. O comando printf é usado para criar esse arquivo com o formato correto, substituindo os valores de $REPOSITORY_URI e $IMAGE_TAG pelas variáveis definidas anteriormente.
+      - printf '[{"name":"bia-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 artifacts:
   files: imagedefinitions.json
+
