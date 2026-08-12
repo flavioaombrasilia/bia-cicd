@@ -3,6 +3,10 @@ version: 0.2
 phases:
   pre_build:
     commands:
+      - echo "Login no Docker Hub para evitar rate limit..."
+      - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+      - echo "Login no ECR..."
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 241585213334.dkr.ecr.us-east-1.amazonaws.com
       - echo Fazendo login no ECR... comando sugeridos no console do ECR , repositorio e obotão "View push commands"     
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 241585213334.dkr.ecr.us-east-1.amazonaws.com
       - echo Definindo variáveis de ambiente... para utilização no build e post_build
@@ -12,19 +16,21 @@ phases:
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
     commands:
+      - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
       - echo Build iniciado em `date`
       - echo Gerando imagem da BIA...
       - docker build -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
+      - docker image inspect $REPOSITORY_URI:latest >/dev/null 2>&1 || { echo "Imagem nao gerada; abortando push"; exit 1; }
       - echo adicionado este texto para explicar o que está acontecendo no post_build
       - echo Build finalizado com sucesso em `date`
       - echo Fazendo push da imagem para o ECR...
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Gerando artefato da imagem para o ECS
-      - o imagedefinitions.json é um arquivo JSON que descreve a imagem do contêiner que será implantada no ECS. Ele contém informações sobre o nome do contêiner e a URI da imagem no ECR. O comando printf é usado para criar esse arquivo com o formato correto, substituindo os valores de $REPOSITORY_URI e $IMAGE_TAG pelas variáveis definidas anteriormente.
+      - echo o imagedefinitions.json é um arquivo JSON que descreve a imagem do contêiner que será implantada no ECS. Ele contém informações sobre o nome do contêiner e a URI da imagem no ECR. O comando printf é usado para criar esse arquivo com o formato correto, substituindo os valores de $REPOSITORY_URI e $IMAGE_TAG pelas variáveis definidas anteriormente.
       - printf '[{"name":"bia-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 artifacts:
   files: imagedefinitions.json
