@@ -18,7 +18,7 @@ phases:
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
-    - adicionado este texto para explicar o que está acontecendo no post_build
+      - adicionado este texto para explicar o que está acontecendo no post_build
       - echo Build finalizado com sucesso em `date`
       - echo Fazendo push da imagem para o ECR...
       - docker push $REPOSITORY_URI:latest
